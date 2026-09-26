@@ -1,5 +1,6 @@
 """OCI 免费 ARM (VM.Standard.A1.Flex) 自动抢机脚本 —— 由 GitHub Actions 定时调用。"""
 import os
+import re
 import sys
 import time
 
@@ -31,11 +32,20 @@ def main():
         return
 
     tenancy = os.environ["OCI_TENANCY_OCID"].strip()
+    fp_raw = os.environ["OCI_FINGERPRINT"].lower()
+    fp = ":".join(re.findall(r"(?<![0-9a-f])[0-9a-f]{2}(?![0-9a-f])", fp_raw.split("=")[-1]))
+    if fp.count(":") != 15:
+        sys.exit(f"OCI_FINGERPRINT 格式不对：应为 16 组 xx:xx:...，实际解析出 {fp.count(':') + 1 if fp else 0} 组，请去 OCI API keys 列表重新复制")
+    key = os.environ["OCI_PRIVATE_KEY"].strip()
+    m = re.search(r"-----BEGIN [A-Z ]*PRIVATE KEY-----.*?-----END [A-Z ]*PRIVATE KEY-----", key, re.S)
+    if not m:
+        sys.exit("OCI_PRIVATE_KEY 里找不到 BEGIN/END PRIVATE KEY，请粘贴 .pem 全文")
+    key = m.group(0)
     cfg = {
         "user": os.environ["OCI_USER_OCID"].strip(),
         "tenancy": tenancy,
-        "fingerprint": os.environ["OCI_FINGERPRINT"].strip(),
-        "key_content": os.environ["OCI_PRIVATE_KEY"].strip() + "\n",
+        "fingerprint": fp,
+        "key_content": key + "\n",
         "region": (os.environ.get("OCI_REGION") or "us-sanjose-1").strip(),
     }
     oci.config.validate_config(cfg)
