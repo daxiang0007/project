@@ -38,3 +38,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh workflow disable grab.yml -R "${{ github.repository }}"
+      - name: 抢到了！发邮件通知
+        if: steps.grab.outputs.done == 'true'
+        run: |
+          echo "::error::抢到了！去 OCI 控制台 Instances 查看 a1-free，用 oci_a1 私钥登录"
+          exit 1
