@@ -31,18 +31,24 @@ def main():
         print(f"::warning::Secrets 未配置完整，本轮跳过：{', '.join(missing)}")
         return
 
-    tenancy = os.environ["OCI_TENANCY_OCID"].strip()
-    fp_raw = os.environ["OCI_FINGERPRINT"].lower()
-    fp = ":".join(re.findall(r"(?<![0-9a-f])[0-9a-f]{2}(?![0-9a-f])", fp_raw.split("=")[-1]))
-    if fp.count(":") != 15:
-        sys.exit(f"OCI_FINGERPRINT 格式不对：应为 16 组 xx:xx:...，实际解析出 {fp.count(':') + 1 if fp else 0} 组，请去 OCI API keys 列表重新复制")
+    def ocid(name, kind):
+        m = re.search(rf"ocid1\.{kind}\.[a-z0-9.\-]*\.[a-z0-9]+", os.environ[name])
+        if not m:
+            sys.exit(f"{name} 里找不到 ocid1.{kind}... 格式的 OCID，请在 OCI 控制台点 Copy 重新复制")
+        return m.group(0)
+
+    tenancy = ocid("OCI_TENANCY_OCID", "tenancy")
+    fp_m = re.search(r"(?<![0-9a-f])(?:[0-9a-f]{2}:){15}[0-9a-f]{2}(?![0-9a-f])", os.environ["OCI_FINGERPRINT"].lower())
+    if not fp_m:
+        sys.exit("OCI_FINGERPRINT 里找不到 xx:xx:...（16 组）格式的指纹，请去 OCI API keys 列表重新复制")
+    fp = fp_m.group(0)
     key = os.environ["OCI_PRIVATE_KEY"].strip()
     m = re.search(r"-----BEGIN [A-Z ]*PRIVATE KEY-----.*?-----END [A-Z ]*PRIVATE KEY-----", key, re.S)
     if not m:
         sys.exit("OCI_PRIVATE_KEY 里找不到 BEGIN/END PRIVATE KEY，请粘贴 .pem 全文")
     key = m.group(0)
     cfg = {
-        "user": os.environ["OCI_USER_OCID"].strip(),
+        "user": ocid("OCI_USER_OCID", "user"),
         "tenancy": tenancy,
         "fingerprint": fp,
         "key_content": key + "\n",
