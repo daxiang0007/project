@@ -55,6 +55,10 @@ def main():
         "region": (os.environ.get("OCI_REGION") or "us-sanjose-1").strip(),
     }
     oci.config.validate_config(cfg)
+    ssh_parts = os.environ["SSH_PUBLIC_KEY"].split()
+    if not ssh_parts or not ssh_parts[0].startswith(("ssh-", "ecdsa-")):
+        sys.exit("SSH_PUBLIC_KEY 不是公钥格式（应以 ssh-ed25519 / ssh-rsa 开头），是不是贴成私钥了？")
+    print(f"SSH 公钥类型={ssh_parts[0]} 备注={ssh_parts[2] if len(ssh_parts) > 2 else '-'}")
     compute = oci.core.ComputeClient(cfg)
     network = oci.core.VirtualNetworkClient(cfg)
     identity = oci.identity.IdentityClient(cfg)
