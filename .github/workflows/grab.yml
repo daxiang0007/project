@@ -16,7 +16,7 @@ concurrency:
 jobs:
   grab:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 58
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -32,7 +32,9 @@ jobs:
           SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
           OCI_SUBNET_ID: ${{ secrets.OCI_SUBNET_ID }}
           OCI_REGION: us-sanjose-1
-        run: python grab.py
+          ATTEMPTS: "50"
+          INTERVAL_SECONDS: "55"
+        run: python -u grab.py
       - name: 抢到后自动停用本 workflow
         if: steps.grab.outputs.done == 'true'
         env:
