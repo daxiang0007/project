@@ -34,6 +34,7 @@ jobs:
           OCI_REGION: us-sanjose-1
           ATTEMPTS: "340"
           INTERVAL_SECONDS: "55"
+          BOOT_VOLUME_GB: "200"
         run: python -u grab.py
       - name: 抢到后自动停用本 workflow
         if: steps.grab.outputs.done == 'true'
