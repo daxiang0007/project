@@ -1,0 +1,7 @@
+build/
+dist/
+reports/
+__pycache__/
+*.backup-*
+*.exe
+*.pdf

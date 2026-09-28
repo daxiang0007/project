@@ -1,0 +1,7 @@
+requests
+trafilatura
+googlenewsdecoder
+deep-translator
+reportlab
+rich
+pyinstaller
